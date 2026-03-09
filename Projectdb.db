@@ -5,7 +5,7 @@ CREATE TABLE Student (
     enrollment_date DATE,
     FOREIGN KEY (account_ID) REFERENCES Account(account_ID)
 );
-
+--test
 CREATE TABLE Professor (
     account_ID TEXT PRIMARY KEY,
     teaching TEXT,
