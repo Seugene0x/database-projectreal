@@ -1,0 +1,96 @@
+--tables of my database
+CREATE TABLE Student (
+    account_ID TEXT PRIMARY KEY,
+    study TEXT,
+    enrollment_date DATE,
+    FOREIGN KEY (account_ID) REFERENCES Account(account_ID)
+);
+
+CREATE TABLE Professor (
+    account_ID TEXT PRIMARY KEY,
+    teaching TEXT,
+    college TEXT,
+    FOREIGN KEY (account_ID) REFERENCES Account(account_ID)
+);
+
+CREATE TABLE Researcher (
+    account_ID TEXT PRIMARY KEY,
+    study TEXT,
+    country TEXT,
+    FOREIGN KEY (account_ID) REFERENCES Account(account_ID)
+);
+
+CREATE TABLE Resource (
+    resource_ID TEXT PRIMARY KEY,
+    topic_ID TEXT NOT NULL,
+    account_ID TEXT NOT NULL,
+    title TEXT NOT NULL,
+    type TEXT CHECK(type IN ('Video', 'Text', 'Practice')),
+    FOREIGN KEY (topic_ID) REFERENCES Topic(topic_ID),
+    FOREIGN KEY (account_ID) REFERENCES Account(account_ID)
+);
+
+CREATE TABLE Practice (
+    resource_ID TEXT PRIMARY KEY,
+    length TEXT,
+    amount_questions INTEGER,
+    FOREIGN KEY (resource_ID) REFERENCES Resource(resource_ID)
+);
+
+CREATE TABLE Videos (
+    resource_ID TEXT PRIMARY KEY,
+    description TEXT,
+    length TEXT,
+    previous_video_ID TEXT,
+    FOREIGN KEY (resource_ID) REFERENCES Resource(resource_ID),
+    FOREIGN KEY (previous_video_ID) REFERENCES Videos(resource_ID)
+);
+
+-- joint tables 
+SELECT 
+    s.StudentId,
+    a.first_name,
+    a.last_name,
+    t.name AS Topic,
+    r.title AS Resource
+FROM Student s
+JOIN Account a ON s.AccountId = a.AccountId
+JOIN Topic t ON s.study = t.name
+JOIN Resource r ON r.topic = t.name;
+
+--subquery
+SELECT first_name, last_name
+FROM Account
+WHERE AccountId IN (
+    SELECT s.AccountId
+    FROM Student s
+    JOIN Videos v ON v.topic = s.study
+);
+
+--groupby/having
+SELECT 
+    t.name AS Topic,
+    COUNT(r.title) AS ResourceCount
+FROM Topic t
+JOIN Resource r ON r.topic = t.name
+GROUP BY t.name
+HAVING COUNT(r.title) > 2;
+
+SELECT title, type
+FROM Resource
+WHERE 
+    (type = 'Video' OR type = 'Practice')
+    AND level = 'Expert';
+	
+	SELECT 
+    t.name,
+    COUNT(r.title) AS ResourceCount,
+    CASE
+        WHEN COUNT(r.title) >= 10 THEN 'Highly Covered'
+        WHEN COUNT(r.title) >= 5 THEN 'Moderately Covered'
+        ELSE 'Low Coverage'
+    END AS CoverageLevel,
+    RANK() OVER (ORDER BY COUNT(r.title) DESC) AS PopularityRank
+FROM Topic t
+JOIN Resource r ON r.topic = t.name
+GROUP BY t.name;
